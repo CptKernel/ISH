@@ -10,7 +10,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 
 
@@ -24,8 +23,8 @@ typedef int bool;
 #define TRUE 1
 
 
-typedef struct {
-    char commandHistory[MAX_COMMANDS][MAX_LINE_LENGTH + 1];
+typedef struct history {
+    char *commandHistory[MAX_COMMANDS][MAX_LINE_LENGTH + 1];
     int commandNumber;
 } history;
 
@@ -34,9 +33,9 @@ void logArgument(history *hist, int commandNumber, char *args[]);
 void readAndParseArgs(char inputBuffer[], char *args[]);
 void displayArgs(char *args[]);
 int num_words_in_sent(char *sentence);
-bool exitCommand(char *args);
+bool byeCommand(char *args);
 bool historyCommand(char *args);
-bool exclamationCommand(char *args);
+bool exclamationCommand(const char *args);
 void showHistory(history *hist);
 
 
@@ -45,7 +44,7 @@ int main(void) {
     char *args[MAX_ARGUMENTS + 1];           /* array of arguments */
     pid_t pid;                               /* pid for processes */
     int wstatus;                             /* status code to be used for wait */
-    int commandIndex = 1;                    /* Keeps track of what command you are on */
+    int commandIndex = 0;                    /* Keeps track of what command you are on */
     history ish_history;
 
 
@@ -67,10 +66,11 @@ int main(void) {
 //            displayArgs(args);
 
             /* checks if command was internal */
-            if (exitCommand(args[0]) == TRUE) {
+            if (byeCommand(args[0]) == TRUE) {
                 return 0;
             } else if (historyCommand(args[0]) == TRUE) {
                 logArgument(&ish_history, commandIndex, args);
+                showHistory(&ish_history);
                 printf("place history function here\n");
             } else if (exclamationCommand(args[0]) == TRUE) {
                 logArgument(&ish_history, commandIndex, args);
@@ -98,6 +98,12 @@ int main(void) {
                 }
             }
         }
+        int testI = 0;
+        while (ish_history.commandHistory[0][testI]) {
+            testI++;
+            printf("%s ", ish_history.commandHistory[0][testI]);
+        }
+        printf("\n");
     }
 }
 
@@ -105,14 +111,38 @@ int main(void) {
 void showHistory(history *hist) {
     int index = hist->commandNumber;
     int tempComNum = hist->commandNumber;
-    if (index > 10) {
+    int histIn;
+    if (index > MAX_COMMANDS) {
+        tempComNum = tempComNum - MAX_COMMANDS;
         index++;
-        for (int i)
+
+        /* Loops through and prints out all reachable commands */
+        for (int i = 0; i < MAX_COMMANDS; i++) {
+            histIn = 0;
+            index = index % MAX_COMMANDS;
+            printf("%3d ", tempComNum);
+            while (hist->commandHistory[index][histIn] != '\0') {
+                printf("%s ", (char *) hist->commandHistory[index][histIn]);
+                histIn++;
+            }
+            tempComNum++;
+            printf("\n");
+        }
+    } else {
+        for (int i = 0; i < index; i++) {
+            histIn = 0;
+            printf("%3d ", i+1);
+            while (hist->commandHistory[i][histIn] != NULL) {
+                histIn++;
+                printf("%s ", hist->commandHistory[i][histIn]);
+            }
+            printf("\n");
+        }
     }
 }
 
 
-bool exclamationCommand(char *args) {
+bool exclamationCommand(const char *args) {
     return *args == '!' ? TRUE : FALSE;
 }
 
@@ -121,9 +151,12 @@ bool exclamationCommand(char *args) {
 void logArgument(history *hist, int commandNumber, char *args[]) {
     int index;
     for (index = 0; args[index] != NULL; index++) {
-        hist->commandHistory[commandNumber % 10][index] = args[index];
+        hist->commandHistory[commandNumber % MAX_COMMANDS][index] = args[index];
+        printf("%s\n", hist->commandHistory[commandNumber % MAX_COMMANDS][index]);
     }
     hist->commandNumber = commandNumber;
+    hist->commandHistory[commandNumber % MAX_COMMANDS][index] = NULL;
+
 }
 
 
@@ -132,8 +165,8 @@ bool historyCommand(char *args) {
 }
 
 
-bool exitCommand(char *args) {
-    return strcmp(args, "exit") == 0 ? TRUE : FALSE;
+bool byeCommand(char *args) {
+    return strcmp(args, "bye") == 0 ? TRUE : FALSE;
 }
 
 
