@@ -37,7 +37,8 @@ bool byeCommand(char *args);
 bool historyCommand(char *args);
 bool exclamationCommand(const char *args);
 void showHistory(history *hist);
-
+void parseArgs(history *hist, char *args[], int commandToGet);
+void executeHistoryCommand(char *args[], history *hist);
 
 int main(void) {
     char inputBuffer[MAX_LINE_LENGTH + 1];   /* buffer to hold the command entered */
@@ -46,6 +47,7 @@ int main(void) {
     int wstatus;                             /* status code to be used for wait */
     int commandIndex = 0;                    /* Keeps track of what command you are on */
     history ish_history;
+    int zomCount = 0;
 
 
 
@@ -57,20 +59,43 @@ int main(void) {
         /* Get a command line */
         readAndParseArgs(inputBuffer, args);
 
+        /* This is grabbing the last arg to see if it is an & */
+        int pIndex;
+        char *lastArg = "";
+        for (pIndex = 0; args[pIndex] != NULL; pIndex++) {
+            lastArg = args[pIndex];
+        }
+
+        /* If it is an &, No longer want it being read as an instruction here */
+        if (strcmp(lastArg, "&") == 0) {
+            args[pIndex - 1] = NULL;
+        }
 
         /* Checks if there was no input. Prevents a segfault */
         if (num_words_in_sent(inputBuffer) > 0) {
 
-            /* Show the individual arguments */
-//            displayArgs(args);
-
             /* checks if command was internal */
             if (byeCommand(args[0]) == TRUE) {
                 return 0;
+            } else if (strcmp(lastArg, "&") == 0) {
+
+                if ((pid = fork()) < 0) {
+                    fprintf(stderr, "Process could not fork.\n");
+                } else if (pid == 0) {
+                    if (execvp(*args, args) < 0) {
+                        fprintf(stderr, "ERROR in execvp call\n Make sure the input commands were correct\n");
+                        exit(EXIT_FAILURE);
+                    }
+                    exit(EXIT_SUCCESS);
+                } else {
+                    printf("[%d] %d\n", ++zomCount, pid);
+                    fflush(stdout);
+                }
             } else if (historyCommand(args[0]) == TRUE) {
                 showHistory(&ish_history);
                 logArgument(&ish_history, commandIndex, args);
             } else if (exclamationCommand(args[0]) == TRUE) {
+//                executeHistoryCommand(args, ish_history);
                 logArgument(&ish_history, commandIndex, args);
                 printf("Insert command history exclamation function here.\n");
             } else {
@@ -99,6 +124,21 @@ int main(void) {
         commandIndex++;
     }
 }
+
+
+void parseArgs(history *hist, char *args[], int commandToGet) {
+    char *word;
+    int currentLocation = hist->commandNumber;
+    if (currentLocation - commandToGet > MAX_COMMANDS) {
+        fprintf(stderr, "Cannot look that far back in command history.\n");
+        return;
+    }
+
+
+}
+
+
+
 
 
 
