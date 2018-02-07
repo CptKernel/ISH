@@ -14,7 +14,7 @@
 
 
 #define MAX_LINE_LENGTH 80               /* upper bounds on line */
-#define MAX_ARGUMENTS MAX_LINE_LENGTH/2  /* and number of arguments */
+#define MAX_ARGUMENTS (MAX_LINE_LENGTH/2)  /* and number of arguments */
 #define DELIMITER " "                    /* Used to tokenize lines */
 #define MAX_COMMANDS 10                  /* Used to determine how far the user can look back at commands */
 
@@ -51,7 +51,7 @@ int main(void) {
 
     while (TRUE) {
         /* Provide a prompt for the command line */
-        printf("%3d ISH> ", commandIndex);
+        printf("%-3d ISH> ", commandIndex);
         fflush(stdout);   /* force output to appear */
 
         /* Get a command line */
@@ -68,9 +68,8 @@ int main(void) {
             if (byeCommand(args[0]) == TRUE) {
                 return 0;
             } else if (historyCommand(args[0]) == TRUE) {
-                logArgument(&ish_history, commandIndex, args);
                 showHistory(&ish_history);
-                printf("place history function here\n");
+                logArgument(&ish_history, commandIndex, args);
             } else if (exclamationCommand(args[0]) == TRUE) {
                 logArgument(&ish_history, commandIndex, args);
                 printf("Insert command history exclamation function here.\n");
@@ -102,37 +101,40 @@ int main(void) {
 }
 
 
-void showHistory(history *hist) {
-    int index = hist->commandNumber;
-    int tempComNum = hist->commandNumber;
-    int histIn;
-    if (index > MAX_COMMANDS) {
-        tempComNum = tempComNum - MAX_COMMANDS;
-        index++;
 
-        /* Loops through and prints out all reachable commands */
-        for (int i = 0; i < MAX_COMMANDS; i++) {
-            histIn = 0;
-            index = index % MAX_COMMANDS;
-            printf("%3d ", tempComNum);
-            while (hist->commandHistory[index][histIn] != '\0') {
-                printf("%s ", (char *) hist->commandHistory[index][histIn]);
-                histIn++;
+void showHistory(history *hist) {
+    printf("\n");
+    int tempCommandNumber = hist->commandNumber;
+    int displayCommandNumber;
+    if (tempCommandNumber > 10) {
+        displayCommandNumber = hist->commandNumber - 9;
+        tempCommandNumber++;
+        while ((tempCommandNumber %  MAX_COMMANDS) != (hist->commandNumber % MAX_COMMANDS)) {
+            printf("%3d ", displayCommandNumber++);
+            for (int i = 0; hist->commandHistory[tempCommandNumber % MAX_COMMANDS][i] != NULL; i++) {
+                printf("%c", hist->commandHistory[tempCommandNumber % MAX_COMMANDS][i]);
             }
-            tempComNum++;
+            tempCommandNumber++;
             printf("\n");
         }
+        printf("%3d ", displayCommandNumber);
+        for (int i = 0; hist->commandHistory[tempCommandNumber % MAX_COMMANDS][i] != NULL; i++) {
+            printf("%c", hist->commandHistory[tempCommandNumber % MAX_COMMANDS][i]);
+        }
+        printf("\n");
     } else {
-        for (int i = 0; i < index; i++) {
-            histIn = 0;
-            printf("%3d ", i+1);
-            while (hist->commandHistory[i][histIn] != NULL) {
-                histIn++;
-                printf("%s ", hist->commandHistory[i][histIn]);
+        displayCommandNumber = 0;
+        while (displayCommandNumber <= hist->commandNumber) {
+            printf("%3d ", displayCommandNumber);
+            for (int i = 0; hist->commandHistory[displayCommandNumber][i] != NULL; i++) {
+                printf("%c", hist->commandHistory[displayCommandNumber][i]);
             }
+            displayCommandNumber++;
             printf("\n");
         }
     }
+    printf("\n");
+
 }
 
 
