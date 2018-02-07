@@ -24,7 +24,7 @@ typedef int bool;
 
 
 typedef struct history {
-    char *commandHistory[MAX_COMMANDS][MAX_LINE_LENGTH + 1];
+    char commandHistory[MAX_COMMANDS][MAX_LINE_LENGTH + 1];
     int commandNumber;
 } history;
 
@@ -53,7 +53,6 @@ int main(void) {
         /* Provide a prompt for the command line */
         printf("%3d ISH> ", commandIndex);
         fflush(stdout);   /* force output to appear */
-        commandIndex++;
 
         /* Get a command line */
         readAndParseArgs(inputBuffer, args);
@@ -98,12 +97,7 @@ int main(void) {
                 }
             }
         }
-        int testI = 0;
-        while (ish_history.commandHistory[0][testI]) {
-            testI++;
-            printf("%s ", ish_history.commandHistory[0][testI]);
-        }
-        printf("\n");
+        commandIndex++;
     }
 }
 
@@ -149,13 +143,18 @@ bool exclamationCommand(const char *args) {
 
 
 void logArgument(history *hist, int commandNumber, char *args[]) {
-    int index;
-    for (index = 0; args[index] != NULL; index++) {
-        hist->commandHistory[commandNumber % MAX_COMMANDS][index] = args[index];
-        printf("%s\n", hist->commandHistory[commandNumber % MAX_COMMANDS][index]);
+    int argsIndex;
+    int histIndex = 0;
+    for (argsIndex = 0; args[argsIndex] != NULL; argsIndex++) {
+        char *temp = args[argsIndex];
+        int charIndex = 0;
+        for (histIndex; temp[charIndex] != NULL; histIndex++) {
+            hist->commandHistory[commandNumber % MAX_COMMANDS][histIndex] = temp[charIndex++];
+        }
+        hist->commandHistory[commandNumber % MAX_COMMANDS][histIndex++] = ' ';
     }
     hist->commandNumber = commandNumber;
-    hist->commandHistory[commandNumber % MAX_COMMANDS][index] = NULL;
+    hist->commandHistory[commandNumber % MAX_COMMANDS][histIndex - 1] = NULL;
 
 }
 
