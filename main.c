@@ -46,11 +46,9 @@ int main(void) {
     char *args[MAX_ARGUMENTS + 1];           /* array of arguments */
     pid_t pid;                               /* pid for processes */
     int wstatus;                             /* status code to be used for wait */
-    int commandIndex = 0;                    /* Keeps track of what command you are on */
+    int commandIndex = 1;                    /* Keeps track of what command you are on */
     history ish_history;
     char currentWorkingDir[2048];
-
-    MAX_COMMANDS = MAX_COMMANDS * 2;
 
     while (TRUE) {
         /* Provide a prompt for the command line */
@@ -257,7 +255,7 @@ void showHistory(history *hist) {
     int tempCommandNumber = hist->commandNumber;
     int displayCommandNumber;
     if (tempCommandNumber >= MAX_COMMANDS) {
-        displayCommandNumber = hist->commandNumber - 9;
+        displayCommandNumber = hist->commandNumber - MAX_COMMANDS + 1;
         tempCommandNumber++;
         while ((tempCommandNumber %  MAX_COMMANDS) != (hist->commandNumber % MAX_COMMANDS)) {
             printf("%3d ", displayCommandNumber++);
@@ -273,7 +271,7 @@ void showHistory(history *hist) {
         }
         printf("\n");
     } else {
-        displayCommandNumber = 0;
+        displayCommandNumber = 1;
         while (displayCommandNumber <= hist->commandNumber) {
             printf("%3d ", displayCommandNumber);
             for (int i = 0; hist->commandHistory[displayCommandNumber][i] != '\0'; i++) {
