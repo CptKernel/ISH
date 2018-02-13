@@ -6,7 +6,7 @@
   MAT 4970
 */
 
-#include <stdio.h>
+#include <stdio.h>                                                                                                                                                                    /* Ethan Cunningham */
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
@@ -38,7 +38,6 @@ bool byeCommand(char *args);
 bool historyCommand(char *args);
 bool exclamationCommand(const char *args);
 void showHistory(history *hist);
-void parseArgs(history *hist, char *args[], int commandToGet);
 void executeHistoryCommand(char *args[], history *hist);
 
 int main(void) {
@@ -65,10 +64,6 @@ int main(void) {
             lastArg = args[pIndex];
         }
 
-        /* If it is an &, No longer want it being read as an instruction here */
-        if (strcmp(lastArg, "&") == 0) {
-            args[pIndex - 1] = NULL;
-        }
 
 
         /* Checks if there was no input. Prevents a segfault */
@@ -78,6 +73,12 @@ int main(void) {
             if (byeCommand(args[0]) == TRUE) {
                 return 0;
             } else if (strcmp(lastArg, "&") == 0) {
+                logArgument(&ish_history, commandIndex, args);
+
+                /* If it is an &, No longer want it being read as an instruction here */
+                if (strcmp(lastArg, "&") == 0) {
+                    args[pIndex - 1] = NULL;
+                }
 
                 if ((pid = fork()) < 0) {
                     fprintf(stderr, "Process could not fork.\n");
@@ -130,18 +131,6 @@ int main(void) {
         }
         commandIndex++;
     }
-}
-
-
-void parseArgs(history *hist, char *args[], int commandToGet) {
-    char *word;
-    int currentLocation = hist->commandNumber;
-    if (currentLocation - commandToGet > MAX_COMMANDS) {
-        fprintf(stderr, "Cannot look that far back in command history.\n");
-        return;
-    }
-
-
 }
 
 
